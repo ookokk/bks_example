@@ -30,11 +30,17 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> fetchProducts() async {
     try {
+      if (_user == null) {
+        print('Error fetching products: User is null');
+        return;
+      }
+
       final QuerySnapshot snapshot = await _firestore
           .collection('users')
           .doc(_user!.uid)
           .collection('smartDevices')
           .get();
+
       _products = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return Product(
@@ -43,14 +49,16 @@ class ProductProvider with ChangeNotifier {
           model: data['model'] as String,
           macAddress: data['macAddress'] as String,
           status: data['status'] as bool,
-          temperature: data['temperature'] as int,
+          temperature: data['temperature'] as int?,
         );
       }).toList();
+
       notifyListeners();
     } catch (error) {
       print('Error fetching products: $error');
     }
   }
+
 
   Future<void> updateProductStatus(int productId, bool newStatus) async {
     try {
